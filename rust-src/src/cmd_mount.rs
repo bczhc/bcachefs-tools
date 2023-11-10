@@ -1,10 +1,10 @@
 use atty::Stream;
 use bch_bindgen::{bcachefs, bcachefs::bch_sb_handle};
 use log::{info, debug, error, LevelFilter};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use uuid::Uuid;
 use std::path::PathBuf;
-use crate::key;
+use crate::{key, transform_c_args};
 use crate::key::KeyLoc;
 use crate::logger::SimpleLogger;
 use std::ffi::{CStr, CString, OsStr, c_int, c_char, c_void};
@@ -129,7 +129,7 @@ fn get_devices_by_uuid(uuid: Uuid) -> anyhow::Result<Vec<(PathBuf, bch_sb_handle
 /// Mount a bcachefs filesystem by its UUID.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Cli {
+pub struct Cli {
     /// Where the password would be loaded from.
     ///
     /// Possible values are:
@@ -228,12 +228,9 @@ fn cmd_mount_inner(opt: Cli) -> anyhow::Result<()> {
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn cmd_mount(argc: c_int, argv: *const *const c_char) -> c_int {
-    let argv: Vec<_> = (0..argc)
-        .map(|i| unsafe { CStr::from_ptr(*argv.add(i as usize)) })
-        .map(|i| OsStr::from_bytes(i.to_bytes()))
-        .collect();
-
+    transform_c_args!(argv, argc, argv);
     let opt = Cli::parse_from(argv);
 
     log::set_boxed_logger(Box::new(SimpleLogger)).unwrap();

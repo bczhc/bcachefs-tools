@@ -8,9 +8,9 @@ use bch_bindgen::btree::BtreeTrans;
 use bch_bindgen::btree::BtreeIter;
 use bch_bindgen::btree::BtreeNodeIter;
 use bch_bindgen::btree::BtreeIterFlags;
-use clap::Parser;
-use std::ffi::{CStr, OsStr, c_int, c_char};
-use std::os::unix::ffi::OsStrExt;
+use clap::{Args, Parser};
+use std::ffi::{c_int, c_char};
+use crate::transform_c_args;
 
 fn list_keys(fs: &Fs, opt: Cli) -> anyhow::Result<()> {
     let trans = BtreeTrans::new(fs);
@@ -84,7 +84,7 @@ fn list_nodes_ondisk(fs: &Fs, opt: Cli) -> anyhow::Result<()> {
     Ok(())
 }
 
-#[derive(Clone, clap::ValueEnum)]
+#[derive(Clone, clap::ValueEnum, Debug)]
 enum Mode {
     Keys,
     Formats,
@@ -92,8 +92,8 @@ enum Mode {
     NodesOndisk,
 }
 
-#[derive(Parser)]
-struct Cli {
+#[derive(Parser, Debug)]
+pub struct Cli {
     /// Btree to list from
     #[arg(short, long, default_value_t=bcachefs::btree_id::BTREE_ID_extents)]
     btree:      bcachefs::btree_id,
@@ -120,7 +120,7 @@ struct Cli {
     /// Force color on/off. Default: autodetect tty
     #[arg(short, long, action = clap::ArgAction::Set, default_value_t=atty::is(Stream::Stdout))]
     colorize:   bool,
-   
+
     /// Verbose mode
     #[arg(short, long)]
     verbose:    bool,
@@ -157,12 +157,9 @@ fn cmd_list_inner(opt: Cli) -> anyhow::Result<()> {
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn cmd_list(argc: c_int, argv: *const *const c_char) {
-    let argv: Vec<_> = (0..argc)
-        .map(|i| unsafe { CStr::from_ptr(*argv.add(i as usize)) })
-        .map(|i| OsStr::from_bytes(i.to_bytes()))
-        .collect();
-
+    transform_c_args!(argv, argc, argv);
     let opt = Cli::parse_from(argv);
     colored::control::set_override(opt.colorize);
     if let Err(e) = cmd_list_inner(opt) {

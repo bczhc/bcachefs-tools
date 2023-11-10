@@ -97,6 +97,9 @@ static void usage(void)
 	     "  fusemount                Mount a filesystem via FUSE\n"
 	     "\n"
 	     "Miscellaneous:\n"
+#ifndef BCACHEFS_NO_RUST
+         "  completions              Generate shell completions\n"
+#endif
 	     "  version                  Display the version of the invoked bcachefs tool\n");
 }
 
@@ -273,6 +276,8 @@ int main(int argc, char *argv[])
 #ifndef BCACHEFS_NO_RUST
 	if (!strcmp(cmd, "mount"))
 		return cmd_mount(argc, argv);
+    if (strstr(cmd, "completions"))
+        return cmd_completions(argc, argv);
 #endif
 
 #ifdef BCACHEFS_FUSE

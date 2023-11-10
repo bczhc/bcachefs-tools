@@ -60,6 +60,7 @@ int cmd_subvolume_delete(int argc, char *argv[]);
 int cmd_subvolume_snapshot(int argc, char *argv[]);
 
 int cmd_fusemount(int argc, char *argv[]);
-int cmd_mount(int agc, char *argv[]);
+int cmd_mount(int argc, char *argv[]);
+int cmd_completions(int argc, char *argv[]);
 
 #endif /* _CMDS_H */
