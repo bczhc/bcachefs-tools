@@ -92,6 +92,7 @@ enum Mode {
     NodesOndisk,
 }
 
+/// List filesystem metadata in textual form
 #[derive(Parser, Debug)]
 pub struct Cli {
     /// Btree to list from
